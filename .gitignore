@@ -1,2 +1,7 @@
 *.user
 build-image_processing-Desktop-Default/
+*.bmp
+*.jpg
+ipch/
+res/
+x64/

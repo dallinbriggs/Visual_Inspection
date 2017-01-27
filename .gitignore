@@ -5,3 +5,10 @@ build-image_processing-Desktop-Default/
 ipch/
 res/
 x64/
+image_proc_qtc/CmakeFiles/
+image_proc_qtc/Makefile
+image_proc_qtc/build/
+*.cmake
+*.cbp
+image_proc_qtc/CMakeCache.txt
+image_proc_qtc/CMakeFiles/

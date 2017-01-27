@@ -1,0 +1,17 @@
+﻿Build started 1/26/2017 5:42:58 PM.
+     1>Project "C:\Users\Dallin\Dropbox\Robotic_Vision\VisualInspection 20160120\VisualInspection.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /IC:\Users\Dallin\opencv\build\include /I"C:\Program Files\Point Grey Research\FlyCapture2\include" /Zi /nologo /W3 /WX- /sdl /Od /D WIN32 /D _WINDOWS /D _DEBUG /D _UNICODE /D UNICODE /D _AFXDLL /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"x64\NoCamera\VisualInspection.pch" /Fo"x64\NoCamera\\" /Fd"x64\NoCamera\vc120.pdb" /Gd /TP /errorReport:prompt HardWare.cpp VisualInspection.cpp VisualInspectionDlg.cpp
+         VisualInspectionDlg.cpp
+     1>c:\users\dallin\opencv\build\include\opencv2\flann\logger.h(66): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\stdio.h(211) : see declaration of 'fopen'
+         VisualInspection.cpp
+     1>VisualInspection.cpp(5): fatal error C1041: cannot open program database 'c:\users\dallin\dropbox\robotic_vision\visualinspection 20160120\x64\nocamera\vc120.pdb'; if multiple CL.EXE write to the same .PDB file, please use /FS
+         HardWare.cpp
+     1>HardWare.cpp(1): fatal error C1041: cannot open program database 'c:\users\dallin\dropbox\robotic_vision\visualinspection 20160120\x64\nocamera\vc120.pdb'; if multiple CL.EXE write to the same .PDB file, please use /FS
+         Generating Code...
+     1>Done Building Project "C:\Users\Dallin\Dropbox\Robotic_Vision\VisualInspection 20160120\VisualInspection.vcxproj" (Build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:01.22

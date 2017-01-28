@@ -17,14 +17,20 @@ int main(int argc, char *argv[])
     string header;
     string tail;
 
-    namedWindow("Team 10",1);
+    //    namedWindow("Team 10",1);
     header = "/home/dallin/robotic_vision_ws/Visual_Inspection/image_proc_qtc/images/";
     tail = ".bmp";
     filename = header + "nilla_edge" + tail;
 
+    image_original = imread(filename,CV_LOAD_IMAGE_COLOR);
+    image = imread(filename,CV_LOAD_IMAGE_GRAYSCALE);
+    GaussianBlur(image, image, Size(7,7), 1.5, 1.5);
+    threshold(image, image,80,255,0);
 
-    image_original = imread(filename,CV_LOAD_IMAGE_GRAYSCALE);
-    GaussianBlur(image_original, image, Size(7,7), 1.5, 1.5);
+    cv::Rect bottomROI(cv::Point(150,480), cv::Point(520, 400));
+    cv::Rect topROI(cv::Point(150,0), cv::Point(520,80));
+    int bottomArea = cv::countNonZero(image(bottomROI));
+    int topArea = cv::countNonZero(image(topROI));
     threshold(image, image,80,255,1);
 
     // Setup SimpleBlobDetector parameters.
@@ -117,27 +123,36 @@ int main(int argc, char *argv[])
     // DrawMatchesFlags::DRAW_RICH_KEYPOINTS flag ensures the size of the circle corresponds to the size of blob
     Mat im_with_keypoints;
 
-    if(!keypoints_good.empty())
+    if(bottomArea < 100 && topArea < 100)
     {
-        drawKeypoints(image_original, keypoints_good, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
-        cout << keypoints_good.size() << " Good!" << endl;
-    }
-    else if(!keypoints_acceptable.empty())
-    {
-        drawKeypoints(image_original, keypoints_acceptable, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
-        cout << keypoints_acceptable.size() << " Acceptable." << endl;
-    }
-    else if(!keypoints_bad.empty())
-    {
-        drawKeypoints(image_original, keypoints_bad, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
-        cout << keypoints_bad.size() << " Bad!" << endl;
+        if(!keypoints_good.empty())
+        {
+            drawKeypoints(image_original, keypoints_good, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+            cout << keypoints_good.size() << " Good!" << endl;
+            cv::putText(im_with_keypoints, "Cookie!", cvPoint(175,150),2, 2.5, cvScalar(255), 1, CV_AA); //FONT_HERSHEY_DUPLEX == 2
+        }
+        else if(!keypoints_acceptable.empty())
+        {
+            drawKeypoints(image_original, keypoints_acceptable, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+            cout << keypoints_acceptable.size() << " Acceptable." << endl;
+        }
+        else if(!keypoints_bad.empty())
+        {
+            drawKeypoints(image_original, keypoints_bad, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+            cout << keypoints_bad.size() << " Bad!" << endl;
+        }
+        else
+        {
+            drawKeypoints(image_original, keypoints_bad, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+        }
+        imshow("Team 10", im_with_keypoints);
     }
     else
     {
-        drawKeypoints(image_original, keypoints_bad, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+        imshow("Team 10", image_original);
+        std::cout << bottomArea << ", " << topArea << std::endl;
     }
 
-    imshow("Good", im_with_keypoints);
 
     waitKey(0);
 

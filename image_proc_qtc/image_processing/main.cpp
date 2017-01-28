@@ -7,8 +7,90 @@ using namespace cv;
 
 int main(int argc, char *argv[])
 {
-    namedWindow("Team 10",1);
 
+    Mat image;
+    Mat current_frame;
+    Mat previous_frame;
+    Mat frame_thresh;
+    string filename;
+    string header;
+    string tail;
+
+    namedWindow("Team 10",1);
+    header = "/home/dallin/robotic_vision_ws/Visual_Inspection/image_proc_qtc/images/";
+    tail = ".bmp";
+    filename = header + "nilla_good" + tail;
+
+
+    image = imread(filename,CV_LOAD_IMAGE_GRAYSCALE);
+    GaussianBlur(image, image, Size(7,7), 1.5, 1.5);
+    threshold(image, image,80,255,1);
+
+    // Setup SimpleBlobDetector parameters.
+    SimpleBlobDetector::Params params_good;
+    SimpleBlobDetector::Params params_acceptable;
+    SimpleBlobDetector::Params params_bad;
+
+    // Change thresholds
+    params_good.minThreshold = 10;
+    params_good.maxThreshold = 255;
+    params_acceptable.minThreshold = 10;
+    params_acceptable.maxThreshold = 255;
+    params_bad.minThreshold = 10;
+    params_bad.maxThreshold = 255;
+
+    // Filter by Area.
+    params_good.filterByArea = true;
+    params_good.minArea = 9000;
+    params_good.maxArea = 11500;
+
+    // Filter by Circularity
+    params_good.filterByCircularity = true;
+    params_good.minCircularity = .82;
+
+    // Filter by Convexity
+    params_good.filterByConvexity = true;
+    params_good.minConvexity = .95;
+
+    // Filter by Inertia
+    params_good.filterByInertia = true;
+    params_good.minInertiaRatio = .7;
+
+#if CV_MAJOR_VERSION < 3   // If you are using OpenCV 2
+
+    // Set up detector with params
+    SimpleBlobDetector detector(params);
+
+    // You can use the detector this way
+    // detector.detect( im, keypoints);
+
+#else
+
+    // Set up detector with params
+    Ptr<SimpleBlobDetector> blobby = SimpleBlobDetector::create(params_good);
+
+    // SimpleBlobDetector::create creates a smart pointer.
+    // So you need to use arrow ( ->) instead of dot ( . )
+    // detector->detect( im, keypoints);
+
+#endif
+
+    // Detect blobs.
+    std::vector<KeyPoint> keypoints;
+    blobby->detect(image, keypoints);
+
+    // Draw detected blobs as red circles.
+    // DrawMatchesFlags::DRAW_RICH_KEYPOINTS flag ensures the size of the circle corresponds to the size of blob
+    Mat im_with_keypoints;
+    drawKeypoints(image, keypoints, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+
+    cout << keypoints.size() << endl;
+
+    imshow("Good", im_with_keypoints);
+
+
+
+    waitKey(0);
 
     return 0;
 }

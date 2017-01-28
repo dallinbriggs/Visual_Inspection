@@ -12,3 +12,4 @@ image_proc_qtc/build/
 *.cbp
 image_proc_qtc/CMakeCache.txt
 image_proc_qtc/CMakeFiles/
+image_proc_qtc/build_debug/

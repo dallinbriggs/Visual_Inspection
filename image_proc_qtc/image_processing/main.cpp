@@ -43,31 +43,58 @@ int main(int argc, char *argv[])
     params_good.filterByArea = true;
     params_good.minArea = 9000;
     params_good.maxArea = 11500;
+    params_acceptable.filterByArea = true;
+    params_acceptable.minArea = 9000;
+    params_acceptable.maxArea = 11500;
+    params_bad.filterByArea = true;
+    params_bad.minArea = 9000;
+    params_bad.maxArea = 11500;
 
     // Filter by Circularity
     params_good.filterByCircularity = true;
     params_good.minCircularity = .82;
+    params_good.maxCircularity = 1;
+    params_acceptable.filterByCircularity = true;
+    params_acceptable.minCircularity = .82;
+    params_acceptable.maxCircularity = .9;
+    params_bad.filterByCircularity = true;
+    params_bad.minCircularity = .5;
+    params_bad.maxCircularity = .7;
 
     // Filter by Convexity
     params_good.filterByConvexity = true;
     params_good.minConvexity = .95;
+    params_good.maxConvexity = 1;
+    params_acceptable.filterByConvexity = true;
+    params_acceptable.minConvexity = .95;
+    params_acceptable.maxConvexity = 1;
+    params_bad.filterByInertia = true;
+    params_bad.minInertiaRatio = .7;
+    params_bad.maxInertiaRatio = 1;
 
     // Filter by Inertia
     params_good.filterByInertia = true;
     params_good.minInertiaRatio = .7;
+    params_good.maxInertiaRatio = 1;
+    params_acceptable.filterByInertia = true;
+    params_acceptable.minInertiaRatio = .7;
+    params_acceptable.maxInertiaRatio = 1;
+    params_bad.filterByInertia = true;
+    params_bad.minInertiaRatio = .7;
+    params_bad.maxInertiaRatio = 1;
 
 #if CV_MAJOR_VERSION < 3   // If you are using OpenCV 2
 
     // Set up detector with params
-    SimpleBlobDetector detector(params);
+    SimpleBlobDetector blobby(params);
 
     // You can use the detector this way
-    // detector.detect( im, keypoints);
+     blobby.detect(image, keypoints);
 
 #else
 
     // Set up detector with params
-    Ptr<SimpleBlobDetector> blobby = SimpleBlobDetector::create(params_good);
+    Ptr<SimpleBlobDetector> blobby_good = SimpleBlobDetector::create(params_good);
 
     // SimpleBlobDetector::create creates a smart pointer.
     // So you need to use arrow ( ->) instead of dot ( . )
@@ -76,15 +103,15 @@ int main(int argc, char *argv[])
 #endif
 
     // Detect blobs.
-    std::vector<KeyPoint> keypoints;
-    blobby->detect(image, keypoints);
+    std::vector<KeyPoint> keypoints_good;
+    blobby_good->detect(image, keypoints_good);
 
     // Draw detected blobs as red circles.
     // DrawMatchesFlags::DRAW_RICH_KEYPOINTS flag ensures the size of the circle corresponds to the size of blob
     Mat im_with_keypoints;
-    drawKeypoints(image, keypoints, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+    drawKeypoints(image, keypoints_good, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
 
-    cout << keypoints.size() << endl;
+    cout << keypoints_good.size() << endl;
 
     imshow("Good", im_with_keypoints);
 

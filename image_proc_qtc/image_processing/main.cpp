@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
 {
 
     Mat image;
+    Mat image_original;
     Mat current_frame;
     Mat previous_frame;
     Mat frame_thresh;
@@ -19,11 +20,11 @@ int main(int argc, char *argv[])
     namedWindow("Team 10",1);
     header = "/home/dallin/robotic_vision_ws/Visual_Inspection/image_proc_qtc/images/";
     tail = ".bmp";
-    filename = header + "nilla_good" + tail;
+    filename = header + "nilla_edge" + tail;
 
 
-    image = imread(filename,CV_LOAD_IMAGE_GRAYSCALE);
-    GaussianBlur(image, image, Size(7,7), 1.5, 1.5);
+    image_original = imread(filename,CV_LOAD_IMAGE_GRAYSCALE);
+    GaussianBlur(image_original, image, Size(7,7), 1.5, 1.5);
     threshold(image, image,80,255,1);
 
     // Setup SimpleBlobDetector parameters.
@@ -41,36 +42,36 @@ int main(int argc, char *argv[])
 
     // Filter by Area.
     params_good.filterByArea = true;
-    params_good.minArea = 9000;
-    params_good.maxArea = 11500;
+    params_good.minArea = 10500;
+    params_good.maxArea = 12000;
     params_acceptable.filterByArea = true;
-    params_acceptable.minArea = 9000;
-    params_acceptable.maxArea = 11500;
+    params_acceptable.minArea = 8000;
+    params_acceptable.maxArea = 10500;
     params_bad.filterByArea = true;
-    params_bad.minArea = 9000;
-    params_bad.maxArea = 11500;
+    params_bad.minArea = 4000;
+    params_bad.maxArea = 8000;
 
     // Filter by Circularity
     params_good.filterByCircularity = true;
     params_good.minCircularity = .82;
     params_good.maxCircularity = 1;
     params_acceptable.filterByCircularity = true;
-    params_acceptable.minCircularity = .82;
-    params_acceptable.maxCircularity = .9;
+    params_acceptable.minCircularity = .6;
+    params_acceptable.maxCircularity = .85;
     params_bad.filterByCircularity = true;
     params_bad.minCircularity = .5;
-    params_bad.maxCircularity = .7;
+    params_bad.maxCircularity = .8;
 
     // Filter by Convexity
     params_good.filterByConvexity = true;
     params_good.minConvexity = .95;
     params_good.maxConvexity = 1;
     params_acceptable.filterByConvexity = true;
-    params_acceptable.minConvexity = .95;
+    params_acceptable.minConvexity = .7;
     params_acceptable.maxConvexity = 1;
-    params_bad.filterByInertia = true;
-    params_bad.minInertiaRatio = .7;
-    params_bad.maxInertiaRatio = 1;
+    params_bad.filterByConvexity = true;
+    params_bad.minConvexity = .4;
+    params_bad.maxConvexity = 1;
 
     // Filter by Inertia
     params_good.filterByInertia = true;
@@ -80,8 +81,8 @@ int main(int argc, char *argv[])
     params_acceptable.minInertiaRatio = .7;
     params_acceptable.maxInertiaRatio = 1;
     params_bad.filterByInertia = true;
-    params_bad.minInertiaRatio = .7;
-    params_bad.maxInertiaRatio = 1;
+    params_bad.minInertiaRatio = .4;
+    params_bad.maxInertiaRatio = .8;
 
 #if CV_MAJOR_VERSION < 3   // If you are using OpenCV 2
 
@@ -89,12 +90,14 @@ int main(int argc, char *argv[])
     SimpleBlobDetector blobby(params);
 
     // You can use the detector this way
-     blobby.detect(image, keypoints);
+    blobby.detect(image, keypoints);
 
 #else
 
     // Set up detector with params
     Ptr<SimpleBlobDetector> blobby_good = SimpleBlobDetector::create(params_good);
+    Ptr<SimpleBlobDetector> blobby_acceptable = SimpleBlobDetector::create(params_acceptable);
+    Ptr<SimpleBlobDetector> blobby_bad = SimpleBlobDetector::create(params_bad);
 
     // SimpleBlobDetector::create creates a smart pointer.
     // So you need to use arrow ( ->) instead of dot ( . )
@@ -104,301 +107,40 @@ int main(int argc, char *argv[])
 
     // Detect blobs.
     std::vector<KeyPoint> keypoints_good;
+    std::vector<KeyPoint> keypoints_acceptable;
+    std::vector<KeyPoint> keypoints_bad;
     blobby_good->detect(image, keypoints_good);
+    blobby_acceptable->detect(image, keypoints_acceptable);
+    blobby_bad->detect(image, keypoints_bad);
 
     // Draw detected blobs as red circles.
     // DrawMatchesFlags::DRAW_RICH_KEYPOINTS flag ensures the size of the circle corresponds to the size of blob
     Mat im_with_keypoints;
-    drawKeypoints(image, keypoints_good, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
 
-    cout << keypoints_good.size() << endl;
+    if(!keypoints_good.empty())
+    {
+        drawKeypoints(image_original, keypoints_good, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+        cout << keypoints_good.size() << " Good!" << endl;
+    }
+    else if(!keypoints_acceptable.empty())
+    {
+        drawKeypoints(image_original, keypoints_acceptable, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+        cout << keypoints_acceptable.size() << " Acceptable." << endl;
+    }
+    else if(!keypoints_bad.empty())
+    {
+        drawKeypoints(image_original, keypoints_bad, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+        cout << keypoints_bad.size() << " Bad!" << endl;
+    }
+    else
+    {
+        drawKeypoints(image_original, keypoints_bad, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+    }
 
     imshow("Good", im_with_keypoints);
-
-
 
     waitKey(0);
 
     return 0;
 }
-
-
-// Below is how I did the last HW assignment. We can use all of these as examples.
-
-/*
-
-#include <iostream>
-#include "opencv2/opencv.hpp"
-#include "opencv2/videoio.hpp"
-
-
-using namespace cv;
-using namespace std;
-
-int main(int argc, char *argv[])
-{
-    VideoCapture cap(0); // open the default camera
-    if(!cap.isOpened())  // check if we succeeded
-        return -1;
-
-    namedWindow("Dallin Briggs",1);
-
-    int exit_key = 0;
-    VideoWriter VOut; // Create a video write object.
-    // Initialize video write object (only done once). Change frame size to match your camera resolution.
-    VOut.open("VideoOut.avi", CV_FOURCC('M', 'P', 'E', 'G') , 30, Size(640, 480), 0);
-
-    while(1)
-    {
-        Mat edges;
-        Mat current_frame;
-        Mat previous_frame;
-        Mat frame_gray;
-        Mat frame_thresh;
-        Mat cdst;
-        Mat motion;
-
-
-
-        switch(waitKey(1) & 0xFF){
-        case '1':
-            while(1){
-                cap >> current_frame; // get a new current_frame from camera
-                cvtColor(current_frame,frame_gray,COLOR_BGR2GRAY);
-                imshow("Briggs", current_frame);
-                VOut << frame_gray;
-                if(waitKey(1) >= 0)
-                    break;
-            }
-            break;
-        case '2':
-            while(1){
-                cap >> current_frame; // get a new current_frame from camera
-                cvtColor(current_frame, edges, COLOR_BGR2GRAY);
-                GaussianBlur(edges, edges, Size(7,7), 1.5, 1.5);
-                Canny(edges, edges, 0, 30, 3);
-                imshow("Briggs", edges);
-                VOut << edges;
-                if(waitKey(1) >= 0)
-                    break;
-            }
-            break;
-        case '3':
-            while(1){
-                cap >> current_frame;
-                cvtColor(current_frame, frame_gray, CV_BGR2GRAY);
-                threshold(frame_gray, frame_thresh,100,255,0);
-                imshow("Briggs", frame_thresh);
-                VOut << frame_thresh;
-                if(waitKey(1) >= 0)
-                    break;
-            }
-            break;
-        case '4':
-            while(1){
-                std::vector< cv::Point2f > frame_corners;
-                /// Detector parameters
-                int blockSize = 3;
-                int apertureSize = 3;
-                double k = 0.04;
-                int thresh = 170;
-                Mat copy;
-
-                cap >> current_frame;
-                cvtColor(current_frame, frame_gray, CV_BGR2GRAY);
-                copy = current_frame.clone();
-                goodFeaturesToTrack(frame_gray,frame_corners, 120, .01, 10, Mat(), blockSize, false, .04);
-
-                /// Drawing a circle around corners
-                for( size_t i = 0; i < frame_corners.size(); i++ )
-                {
-                    cv::circle(frame_gray, frame_corners[i], 10, cv::Scalar( 255. ), -1 );
-                }
-
-                imshow("Briggs", frame_gray);
-                VOut << frame_gray;
-                if(waitKey(1) >= 0)
-                    break;
-            }
-            break;
-        case '5':
-            while(1){
-                cap >> current_frame; // get a new current_frame from camera
-                cvtColor(current_frame, edges, COLOR_BGR2GRAY);
-                GaussianBlur(edges, edges, Size(7,7), 1.5, 1.5);
-                Canny(edges, edges, 0, 30, 3);
-                cvtColor(edges, cdst, CV_GRAY2BGR);
-
-                vector<Vec4i> lines;
-                HoughLinesP(edges, lines, 1, CV_PI/180, 50, 50, 10 );
-                for( size_t i = 0; i < lines.size(); i++ )
-                {
-                    Vec4i l = lines[i];
-                    line( cdst, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, CV_AA);
-                }
-
-                cvtColor(cdst, cdst, CV_BGR2GRAY);
-                imshow("source", current_frame);
-                imshow("detected lines", cdst);
-                VOut << cdst;
-                if(waitKey(1) >= 0)
-                    break;
-            }
-            break;
-
-        case '6':
-            while(1){
-                frame_gray.copyTo(previous_frame);
-                cap >> current_frame; // get a new current_frame from camera
-                cvtColor(current_frame,frame_gray,COLOR_BGR2GRAY);
-                if(previous_frame.empty())
-                {
-                    previous_frame = Mat::zeros(frame_gray.size(), frame_gray.type()); // prev frame as black
-                    //signed 16bit mat to receive signed difference
-                }
-
-                absdiff(frame_gray, previous_frame, motion);
-
-                imshow("Briggs", motion);
-                VOut << motion;
-                if(waitKey(1) >= 0)
-                    break;
-
-            }
-            break;
-        case '7':
-            exit_key = 1;
-            break;
-        }
-
-        if(exit_key == 1)
-            break;
-
-    }
-    return 0;
-}
-
-*/
-
-
-
-/*
- *
- * My code from P3
-#include <iostream>
-#include "opencv2/opencv.hpp"
-#include "opencv2/videoio.hpp"
-#include <fstream>
-#include <string>
-
-using namespace cv;
-using namespace std;
-
-int main(int argc, char *argv[])
-{
-    Mat image;
-    Mat current_frame;
-    Mat previous_frame;
-    Mat frame_thresh;
-    Mat motion;
-    Mat first_frame;
-    string filename;
-    string header;
-    string tail;
-
-    VideoWriter VOut; // Create a video write object.
-    // Initialize video write object (only done once). Change frame size to match your camera resolution.
-    VOut.open("VideoOut.avi", CV_FOURCC('M', 'P', 'E', 'G') , 30, Size(640, 480), 1);
-
-    namedWindow("Dallin Briggs",1);
-    //    SimpleBlobDetector blobby;
-
-    // Setup SimpleBlobDetector parameters.
-    SimpleBlobDetector::Params params;
-
-    // Change thresholds
-    params.minThreshold = 10;
-    params.maxThreshold = 255;
-
-    // Filter by Area.
-    params.filterByArea = true;
-    params.minArea = 100;
-
-    // Filter by Circularity
-    params.filterByCircularity = true;
-    params.minCircularity = 0.1;
-
-    // Filter by Convexity
-    params.filterByConvexity = true;
-    params.minConvexity = 0.87;
-
-    // Filter by Inertia
-    params.filterByInertia = true;
-    params.minInertiaRatio = .3;
-
-#if CV_MAJOR_VERSION < 3   // If you are using OpenCV 2
-
-    // Set up detector with params
-    SimpleBlobDetector detector(params);
-
-    // You can use the detector this way
-    // detector.detect( im, keypoints);
-
-#else
-
-    // Set up detector with params
-    Ptr<SimpleBlobDetector> blobby = SimpleBlobDetector::create(params);
-
-    // SimpleBlobDetector::create creates a smart pointer.
-    // So you need to use arrow ( ->) instead of dot ( . )
-    // detector->detect( im, keypoints);
-
-#endif
-
-
-    for(int i = 5; i < 41; i++)
-    {
-        header = "/home/dallin/Dropbox/Robotic_Vision/HW1_P3/Baseball_images/1R";
-        tail = ".jpg";
-        filename = header + to_string(i) + tail;
-
-        first_frame = imread(header + '5' + tail, CV_LOAD_IMAGE_GRAYSCALE);
-        image = imread(filename,CV_LOAD_IMAGE_GRAYSCALE);
-
-        current_frame.copyTo(previous_frame);
-
-        current_frame = image;
-        if(previous_frame.empty())
-        {
-            previous_frame = Mat::zeros(current_frame.size(), current_frame.type()); // prev frame as black
-            //signed 16bit mat to receive signed difference
-        }
-        absdiff(current_frame, first_frame, motion);
-        GaussianBlur(motion,motion, Size(7,7), 1.5, 1.5);
-        threshold(motion, frame_thresh,10,255,1);
-
-
-        // Detect blobs.
-        std::vector<KeyPoint> keypoints;
-        blobby->detect(frame_thresh, keypoints);
-
-        // Draw detected blobs as red circles.
-        // DrawMatchesFlags::DRAW_RICH_KEYPOINTS flag ensures the size of the circle corresponds to the size of blob
-        Mat im_with_keypoints;
-        drawKeypoints(current_frame, keypoints, im_with_keypoints, Scalar(0,0,255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
-
-        cout << keypoints.size() << endl;
-        // Show blobs
-        imshow("keypoints", im_with_keypoints );
-        VOut << im_with_keypoints;
-        //        imshow("Briggs", frame_circles);
-
-        waitKey(100);
-
-    }
-
-    return 0;
-}
-
-*/
 
